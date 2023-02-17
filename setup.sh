@@ -4,11 +4,8 @@
 FILENAME="guest.qcow2"
 SIZE=2	# 2GB is minimum required
 TYPE="qcow2"
-SILENT=0
 
 . common.sh
-
-[ ! -z $2 ] && SILENT=1		# NO PROMPTS IF RAN WITH PARAMS
 
 Usage() {
   echo -e $WHITE
@@ -38,25 +35,15 @@ if [[ "$FILENAME" =~ "." ]]; then
   fi
 fi
 
-if [ $SILENT -eq 0 ]; then
-  # This script can be safely run repeatedly. The host is not modified other than installing KVM tools.
-  echo -e $GREEN
-  echo "***********************Debian VM setup script***********************"
-  echo -e "Create: $WHITE$FILENAME$GREEN of size $WHITE${SIZE}GB$GREEN - ./setup.sh file.qcow2 10 will make 10GB"
-  echo -e $NONE
-  read -p "Install KVM and utils on this host, then build a new vm? (Y/N): " CONFIRM && [[ $CONFIRM == [yY] || $CONFIRM == [yY][eE][sS] ]] && echo || exit 1
-  echo
-fi
-
 # SETUP HOST AS KVM SERVER
-apt update
-[ $? -ne 0 ] && echo "Unable to update apt" && exit 1
-apt install -y systemd parallel rsync pciutils usbutils
-[ $? -ne 0 ] &&	echo "Failed to install apps, no internet?" && exit 1
+#apt update
+#[ $? -ne 0 ] && echo "Unable to update apt" && exit 1
+#apt install -y systemd parallel rsync pciutils usbutils
+#[ $? -ne 0 ] &&	echo "Failed to install apps, no internet?" && exit 1
 
 # INSTALL KVM
-apt install -y qemu-system-x86 libvirt-daemon-system libvirt-clients bridge-utils virtinst libvirt-daemon libguestfs-tools virt-manager
-[ $? -ne 0 ] && echo "Failed to install KVM, no internet?" && exit 1
+#apt install -y qemu-system-x86 libvirt-daemon-system libvirt-clients bridge-utils virtinst libvirt-daemon libguestfs-tools virt-manager
+#[ $? -ne 0 ] && echo "Failed to install KVM, no internet?" && exit 1
 
 
 # First detach and remove any existing image file by this name
@@ -130,13 +117,6 @@ FILE="_g.sh"
 [ "$TYPE" == "raw" ] && FILE="_h.sh"
 cp ${FILE} root/root/ && chroot root /root/${FILE}
 
-if [ $SILENT -eq 0 ]; then
-  ./detach.sh && echo "Complete!"
-  echo -e $GREEN
-  echo "***********************Debian VM setup script***********************"
-  echo -e $NONE
-  read -p "Deploy VM and show in console [runs deploy.sh $FILENAME]? (Y/N): " CONFIRM && [[ $CONFIRM == [yY] || $CONFIRM == [yY][eE][sS] ]] && echo "Deploying..." && ./deploy.sh
-fi
 echo -e $GREEN
 echo "Done!"
 echo -e $NONE
