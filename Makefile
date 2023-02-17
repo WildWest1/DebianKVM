@@ -1,0 +1,29 @@
+default: guest.qcow2
+
+guest.qcow2:
+	# Just run the setup with defaults
+	./setup.sh
+
+host.img: guest.qcow2
+	# Make a bootable usb host vm that contains a guest vm
+	@./setup.sh host.img 10 ; \
+	if [ $$? -eq 0 ]; then  \
+		echo "Makefile copying guest.qcow2 to host..." ; \
+		cp guest.qcow2 root/root ; \
+		cp *.sh root/root/ ; \
+		./detach.sh ; \
+		echo "Run make_bootable_usb.sh to compelete." ; \
+		#./make_bootable_usb.sh host.img ; \
+	fi
+
+clean:
+	# Remove all images and start fresh
+	- ./detach.sh
+	@echo "Deleting all images"
+	- rm -rf *.qcow2 *.img *.raw *.qcow root boot
+	@echo "Removing guest.qcow2 vm..."
+	- virsh destroy guest.qcow2 2>/dev/null
+	- virsh undefine guest.qcow2 >2/dev/null
+	@echo
+	@echo
+	virsh list --all
