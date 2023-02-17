@@ -2,7 +2,7 @@ default: guest.qcow2
 
 guest.qcow2:
 	# Just run the setup with defaults
-	./setup.sh
+	./setup.sh guest.qcow2 2
 
 host.img: guest.qcow2
 	# Make a bootable usb host vm that contains a guest vm

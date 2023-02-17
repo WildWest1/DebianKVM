@@ -39,13 +39,13 @@ if [[ "$FILENAME" =~ "." ]]; then
 fi
 
 if [ $SILENT -eq 0 ]; then
-	# This script can be safely run repeatedly. The host is not modified other than installing KVM tools.
-	echo -e $GREEN
-	echo "***********************Debian VM setup script***********************"
-	echo -e "Create: $WHITE$FILENAME$GREEN of size $WHITE${SIZE}GB$GREEN - ./setup.sh file.qcow2 10 will make 10GB"
-	echo -e $NONE
-	read -p "Install KVM and utils on this host, then build a new vm? (Y/N): " CONFIRM && [[ $CONFIRM == [yY] || $CONFIRM == [yY][eE][sS] ]] && echo || exit 0
-	echo
+  # This script can be safely run repeatedly. The host is not modified other than installing KVM tools.
+  echo -e $GREEN
+  echo "***********************Debian VM setup script***********************"
+  echo -e "Create: $WHITE$FILENAME$GREEN of size $WHITE${SIZE}GB$GREEN - ./setup.sh file.qcow2 10 will make 10GB"
+  echo -e $NONE
+  read -p "Install KVM and utils on this host, then build a new vm? (Y/N): " CONFIRM && [[ $CONFIRM == [yY] || $CONFIRM == [yY][eE][sS] ]] && echo || exit 1
+  echo
 fi
 
 # SETUP HOST AS KVM SERVER
@@ -60,7 +60,7 @@ apt install -y qemu-system-x86 libvirt-daemon-system libvirt-clients bridge-util
 
 
 # First detach and remove any existing image file by this name
-echo -e "${RED}Checking for existing file and removing if found...${RED}"
+echo -e "${RED}Checking for existing file and removing if found...${NONE}"
 if [ -f "$FILENAME" ]; then
   read -p "Existing image found, do you want to delete (Y/N): " CONFIRM && [[ $CONFIRM == [yY] || $CONFIRM == [yY][eE][sS] ]] && ./detach.sh && rm $FILENAME || exit 1
 fi
