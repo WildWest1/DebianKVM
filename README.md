@@ -1,5 +1,5 @@
 # DebianKVM
-Scripts that automate creating guest and host VM’s individually or together, make bootable flash drive, etc.
+Create Debian VM's without requiring any installation media, and make bootable host/guest combo
 
 Makefile is to help bootstrap simple setups.
 Usage:
