@@ -42,9 +42,6 @@ apt install -y qemu-system-x86 libvirt-daemon-system libvirt-clients bridge-util
 ln -s /lib/systemd/system/nftables.service /etc/systemd/system/multi-user.target.wants/nftables.service
 ln -s /lib/systemd/system/serial-getty@ttyS0.service /etc/systemd/system/multi-user.target.wants/serial-getty@ttyS0.service
 
-virsh net-start default
-virsh net-autostart default
-
 echo -e "password\npassword" | passwd
 
 # GRUB BOOTLOADER FOR UEFI:

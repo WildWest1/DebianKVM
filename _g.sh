@@ -25,7 +25,7 @@ apt install -y grub2
 root_uuid='UUID="'$(blkid -s UUID -o value /dev/nbd0p1)'"'
 echo -e "# /etc/fstab: static file system information.\n# <file system> <mount point>   <type>  <options>       <dump>  <pass>\n$root_uuid / ext4 errors=remount-ro 0 1" > /etc/fstab
 # NETWORK DHCP
-echo -e "\n\nauto enp1s0\niface enp1s0 inet dhcp\n" >> /etc/network/interfaces
+echo -e "\n\nauto enp0s2\niface enp0s2 inet dhcp\n" >> /etc/network/interfaces
 
 # CONFIGURE GRUB BOOTLOADER
 grub-install /dev/nbd0

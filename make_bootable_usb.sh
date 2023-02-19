@@ -12,19 +12,18 @@ TYPE=raw
 echo -e $GREEN
 echo "***********************************************************"
 echo "The script will make a bootable USB drive out of a vm image"
-echo "*Your usb drive must show up as /dev/sdb (automatic checks)"
-echo "Easy way to verify is to wait to plugin USB until prompted"
-echo "-->To manually verify: Run lsblk when plugged/unplugged"
+echo "Your usb drive must be /dev/sdb (automatically checks)"
+echo "To manually verify: Run lsblk when plugged/unplugged"
 echo "This script will auto unmount any mount points on sdb"
 echo "***********************************************************"
 echo -ne $NONE
 
 Sanity() {
   # SOURCE FILE EXISTS
-  echo -e $LTRED ; [ ! -f $FILENAME ] && echo "-->Image file not found!" && echo && echo -e $NONE && exit 1
+  [ ! -f $FILENAME ] && echo -e "${LTRED}-->Image file not found!" && echo && echo -e $NONE && exit 1
   # DESTINATION (sdb) IS NOT ROOT FS
   ROOTDRIVE=$(mount|grep ' / '|cut -d' ' -f 1 | sed 's/.$//')
-  echo -e $LTRED ; [ "$ROOTDRIVE" == "/dev/sdb" ] && echo && echo "-->You root drive is sdb, cannot continue" && echo -e $NONE && exit 1
+  [ "$ROOTDRIVE" == "/dev/sdb" ] && echo -e "${LTRED}-->You root drive is sdb, cannot continue" && echo -e $NONE && exit 1
 }
 
 function UsbExists {
@@ -125,6 +124,6 @@ fi
 #qemu-img dd if=$FILENAME of=/dev/sdb
 
 #echo Begin copying...
-#dd if=$FILENAME of=/dev/sdb bs=4M status=progress oflag=nocache,sync conv=fsync
-dd if=$FILENAME of=/dev/sdb status=progress
+dd if=$FILENAME of=/dev/sdb bs=4M status=progress oflag=nocache,sync conv=fsync
+#dd if=$FILENAME of=/dev/sdb status=progress
 [ $? -eq 0 ] && echo "Success!" && exit 0 || echo "Failed." && echo 1

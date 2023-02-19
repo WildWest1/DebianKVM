@@ -12,8 +12,7 @@ host.img: guest.qcow2
 		cp guest.qcow2 root/root ; \
 		cp *.sh root/root/ ; \
 		./detach.sh ; \
-		echo "Run make_bootable_usb.sh to compelete." ; \
-		#./make_bootable_usb.sh host.img ; \
+		echo ; echo "RUN:  \"./make_bootable_usb.sh host.img\"";echo ; \
 	fi
 
 clean:
