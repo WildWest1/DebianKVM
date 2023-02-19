@@ -126,4 +126,5 @@ fi
 #echo Begin copying...
 dd if=$FILENAME of=/dev/sdb bs=4M status=progress oflag=nocache,sync conv=fsync
 #dd if=$FILENAME of=/dev/sdb status=progress
+sync
 [ $? -eq 0 ] && echo "Success!" && exit 0 || echo "Failed." && echo 1

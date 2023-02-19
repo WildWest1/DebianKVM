@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Setup wpa supplicant to authenticate to wifi - only needs run once if you set a static ip
+
 Usage() {
   echo "Sets up wifi authentcation to happen at every boot"
   echo "Initial setup (required), or to update SSID/Pass:"
@@ -15,7 +17,6 @@ WIFINIC=$1
 SSID=$2
 PASS=$3
 
-# Setup wpa supplicant to authenticate to wifi - only needs run once if you set a static ip
 
 # Make sure these are installed...
 # Firmware is like the driver, my laptop has qualcomm atheros so firmware-atheros, yours may have intel wireless which is firmware-iwlwifi, or find the apt package for your wireless adapter and install it
@@ -25,18 +26,23 @@ PASS=$3
 
 # Stop any existing wpa_supplicant
 pkill wpa >/dev/null 2>&1
-ip link set $WIFINIC down
+#ip link set $WIFINIC down
 
 if [[ ! -z $2 && ! -z $3 ]]; then
   # Enable wpa_supplicant to automatically login to wifi
   cp /lib/systemd/system/wpa_supplicant.service /etc/systemd/system/wpa_supplicant.service
-  key=ExecStart
-  value="/sbin/wpa_supplicant -c /etc/wpa_supplicant/wpa_supplicant.conf -i ${WIFINIC} & >/dev/null 2>&1"
-  sed -i "s:^\(${key}\s*=\s*\).*\$:\1${value}:" /etc/systemd/system/wpa_supplicant.service
-  key=After
-  value="dbus.service networking.service"
-  sed -i "s:^\(${key}\s*=\s*\).*\$:\1${value}:" /etc/systemd/system/wpa_supplicant.service
-  # Start service automatically that reads from config
+  # Add restart=always by extending the config (ratherthan trying to add to section and checking if already there)
+  mkdir -p /etc/systemd/system/wpa_supplicant.service.d
+  echo -e "[Service]\nRestart=always" > /etc/systemd/system/wpa_supplicant.service.d/wpa_supplicant.conf
+  # Replace ExecStart setting
+  KEY=ExecStart
+  VALUE="/sbin/wpa_supplicant -u -s -c /etc/wpa_supplicant/wpa_supplicant.conf -i ${WIFINIC}"
+  sed -i "s?$KEY=.*?$KEY=$VALUE?" /etc/systemd/system/wpa_supplicant.service
+  # Replace After setting
+  KEY=After
+  VALUE="dbus.service networking.service"
+  sed -i "s?$KEY=.*?$KEY=$VALUE?" /etc/systemd/system/wpa_supplicant.service
+  # Update and set service to start automatically
   systemctl daemon-reload
   systemctl enable wpa_supplicant
   # Add wifi config
@@ -56,23 +62,23 @@ fi
 
 echo "---------------------------------"
 echo "Bringing ${WIFINIC} up..."
-ip link set $WIFINIC up
-systemctl restart networking
+#ip link set $WIFINIC up
+systemctl restart networking	# Just in case changes were made to /etc/networking/interface
 
 if [ -z $2 ]; then
   # MANUAL process (not dependent on anything above other than the wpa config)
   echo Logging on to Wireless network...
-  wpa_supplicant -c /etc/wpa_supplicant/wpa_supplicant.conf  -i $WIFINIC & >/dev/null 2>&1
+  wpa_supplicant -u -s -c /etc/wpa_supplicant/wpa_supplicant.conf  -i $WIFINIC >/dev/null 2>&1 &
 else
   # Automatic process
   echo "Restarting wpa_supplicant..."
   systemctl restart wpa_supplicant &
-  sleep 5
+  #sleep 5
 fi
 
-echo "Obtaining DHCP..."
-dhclient $WIFINIC &
-sleep 5
+#echo "Obtaining DHCP..."
+#dhclient $WIFINIC &
+#sleep 5
 
 echo "---------------------------------"
 echo "Done."
