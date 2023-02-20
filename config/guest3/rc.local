@@ -1,0 +1,32 @@
+#!/bin/bash
+
+function Install {
+  apt install -y openvpn resolvconf
+  return $?
+}
+
+# INSTALL OPENVPN
+if [ ! -e /etc/openvpn/client ]; then
+  echo "Waiting on DNS server setup to complete to install openvpn..."
+  sleep 30
+  echo "Trying to Install openvpn..."
+  for i in {1..5}
+  do
+    if [ ! -e /etc/openvpn/client ]; then
+      echo "Attempt $i..."
+      Install
+      [ $? -eq 0 ] && echo "Installation (${i}) successful!" && break || echo "Retrying installation..." ; sleep 5
+    fi
+  done
+fi
+
+if [ -e /etc/openvpn/client ]; then
+  echo "Connecting to openvpn..."
+  openvpn /etc/openvpn/vpn.ovpn&
+  sleep 5
+  systemctl restart nftables
+  sleep 2
+  nft add rule nat postrouting oif tun0 masquerade
+fi
+
+exit 0

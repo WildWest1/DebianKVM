@@ -1,0 +1,18 @@
+# interfaces(5) file used by ifup(8) and ifdown(8)
+# Include files from /etc/network/interfaces.d:
+source /etc/network/interfaces.d/*
+
+auto wlp2s0
+iface wlp2s0 inet static
+  address 192.168.0.200/24
+  gateway 192.168.0.1
+
+# Using bridgenew.sh instead
+#iface enx00e04c680c11 inet manual
+#auto br0
+#iface br0 inet static
+#  bridge_ports enx00e04c680c11
+#  address 10.255.255.1/24
+#  bridge_stp on
+#  bridge_waitport 0
+#  bridge_fd 0

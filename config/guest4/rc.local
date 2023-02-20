@@ -1,0 +1,18 @@
+#!/bin/bash
+
+if [ ! -e /etc/bind/db.local ]; then
+  for i in {1..5}
+  do
+    apt install -y bind9 bind9utils
+    if [ $? -eq 0 ]; then
+      systemctl start named
+      systemctl enable named
+      cp /etc/bind/backup/* /etc/bind/
+      cp /etc/resolv.host /etc/resolv.conf
+      rm /etc/resolv.host
+      break
+    fi
+  done
+fi
+
+exit 0

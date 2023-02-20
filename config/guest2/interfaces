@@ -1,0 +1,16 @@
+# interfaces(5) file used by ifup(8) and ifdown(8)
+# Include files from /etc/network/interfaces.d:
+source /etc/network/interfaces.d/*
+
+#auto ens1
+#iface ens1 inet dhcp
+
+auto ens2
+iface ens2 inet static
+  address 10.0.0.2/24
+
+auto enp1s3
+iface enp1s3 inet static
+  address 172.16.16.2/24
+
+up ip route add default via 10.0.0.1

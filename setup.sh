@@ -4,8 +4,11 @@
 FILENAME="guest.qcow2"
 SIZE=2	# 2GB is minimum required
 TYPE="qcow2"
+DETACH=1
 
 . common.sh
+
+[ ! -z $3 ] && DETACH=0
 
 Usage() {
   echo -e $WHITE
@@ -116,6 +119,8 @@ debootstrap --variant=minbase --arch amd64 stable root http://deb.debian.org/deb
 FILE="_g.sh"
 [ "$TYPE" == "raw" ] && FILE="_h.sh"
 cp ${FILE} root/root/ && chroot root /root/${FILE}
+
+[ $DETACH -eq 1 ] && ./detach.sh
 
 echo -e $GREEN
 echo "Done!"

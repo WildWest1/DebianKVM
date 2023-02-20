@@ -1,0 +1,12 @@
+<network>
+  <name>net10</name>
+  <uuid>1e6f24c8-8692-4cfe-bd93-769804e00010</uuid>
+  <forward mode='route'/>
+  <bridge name='virbr10' stp='on' delay='0'/>
+  <mac address='10:10:10:10:10:00'/>
+  <ip address='10.0.0.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='10.0.0.10' end='10.0.0.250'/>
+    </dhcp>
+  </ip>
+</network>

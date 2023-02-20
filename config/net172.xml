@@ -1,0 +1,12 @@
+<network>
+  <name>net172</name>
+  <uuid>1e6f24c8-8692-4cfe-bd93-769804e00172</uuid>
+  <forward mode='route'/>
+  <bridge name='virbr172' stp='on' delay='0'/>
+  <mac address='00:17:17:17:17:00'/>
+  <ip address='172.16.16.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='172.16.16.10' end='172.16.16.250'/>
+    </dhcp>
+  </ip>
+</network>
