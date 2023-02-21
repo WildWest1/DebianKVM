@@ -1,4 +1,7 @@
+#!/bin/bash
+
 # Run to create aliases, or use for reference...
+# Even better, append these aliases to your ~/.bashrc file so they are always available
 
 alias virtm='virt-manager'	# GUI manager
 

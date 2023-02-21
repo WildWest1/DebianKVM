@@ -1,29 +1,71 @@
 #!/bin/bash
 
-# Launches vm
+# Uses virsh-install to deploy vms to default directory persistently (OVERWRITES EXISTING)
 
-# Default if no args
-GUEST="guest.qcow2"
+FILENAME=$1
+VMHOME=/var/lib/libvirt/images/
+VMPATH=$VMHOME$FILENAME
 
-[ ! -z $1 ] && GUEST=$1
+. common.sh
 
-[ ! -f $GUEST ] && echo "File not found!" && exit 1
+Usage() {
+  echo "Usage: ${0##*/} [filename]"
+  exit 1
+}
 
-virsh net-start default
+GetVmFileType $FILENAME
 
-# Remove any existing vm by this name...
-virsh destroy $GUEST 2>/dev/null
-virsh undefine $GUEST 2>/dev/null
+if [ $# -ne 1 ]; then
+  Usage
+  exit 1
+else
+  if [ -f $VMPATH ]; then
+    echo "Are you sure you want to remove $VMHOME$FILENAME (y)?"
+    read RESULT
+    if [[ $RESULT != "Y" && $RESULT != "y" ]]; then
+      exit 1
+    fi
+  fi
+  rm $VMPATH 2>/dev/null
+  cp $FILENAME $VMHOME
+  chown libvirt-qemu:libvirt-qemu $VMPATH
+  chmod 600 $VMPATH
 
-cp $GUEST /var/lib/libvirt/images/
+  # Delete existing instance
+  virsh destroy $FILENAME 2>/dev/null
+  virsh --connect qemu:///system undefine --nvram $FILENAME 2>/dev/null
 
-# Install and launch basic config
-virt-install --name $GUEST --vcpus 1 --memory 1024 --os-variant generic --noautoconsole --console pty,target_type=serial --graphics none --accelerate --network network="default" --disk=/var/lib/libvirt/images/$GUEST --import
+  # CREATE NEW VM
+  if [[ $TYPE == "qcow2" || $TYPE == "qcow" ]]; then
+    # Assume this is a guest since it is a qcow type, which needs minimal hardware, and has no need for EFI firmware (boots to default bios)
+    virt-install --name $FILENAME \
+    --vcpus 1 \
+    --memory 1024 \
+    --os-variant generic \
+    --disk $VMPATH,bus=virtio,format=$TYPE \
+    --import \
+    --noautoconsole \
+    --console pty,target_type=serial \
+    --graphics none \
+    --accelerate \
+    --network network="default" \
 
-# Show in console
-echo -e $GREEN
-echo -e "To view guest vm console RUN: \"${YELLLOW}virsh console $GUEST${NONE}\""
-echo "Rename guest.qcow2 and deploy as many vms as you want!"
-echo -e "To see all guests RUN: \"${YELLOW}virsh list --all${NONE}\""
-echo -e "Run \"${YELLOW}. ./virshaliases.sh${NONE}\" or \"${YELLOW}cat virshaliases${NONE}\" to see virsh options"
-echo -e $NONE
+  elif [ $TYPE == "raw" ]; then
+    # Assume this is a host since it is likely a raw type, which is probably meant to be used to make usb, so give it more hardware, and EFI firmware
+    virt-install --name $FILENAME \
+      --vcpus 4 \
+      --memory 8192 \
+      --boot loader=/usr/share/OVMF/OVMF_CODE_4M.fd,loader.readonly=yes,loader.type=pflash \
+      --os-variant generic \
+      --disk $VMPATH,format=$TYPE \
+      --import \
+      --noautoconsole \
+      --console pty,target_type=serial \
+      --network network="default"
+  fi
+  # Launch console
+  #virsh console $FILENAME
+  echo
+  echo "To list running vms use \"virsh list\", or to connect to the console of this vm now run:"
+  echo "virsh console $FILENAME"
+fi
