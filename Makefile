@@ -1,12 +1,25 @@
 default: guest.qcow2
 
+.PHONY: guest
+
+guest: guest.qcow2
+
+.PHONY: host
+
+host: host.img
+
+.PHONY: usb
+
+usb: host.img
+	./make_bootable_usb.sh host.img
+
 guest.qcow2:
 	# Just run the setup with defaults
 	./setup.sh guest.qcow2 2
 
 host.img: guest.qcow2
 	# Make a bootable usb host vm that contains a guest vm
-	@./setup.sh host.img 10 nodetach; \
+	@./setup.sh host.img 30 nodetach; \
 	if [ $$? -eq 0 ]; then  \
 		echo "Makefile copying guest.qcow2 to host..." ; \
 		cp guest.qcow2 root/root ; \
