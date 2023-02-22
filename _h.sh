@@ -58,8 +58,8 @@ update-grub
 cp /boot/efi/EFI/debian/fbx64.efi /boot/efi/EFI/BOOT/bootx64.efi
 
 # Host fixes for production
-cp config/sleep.conf /etc/systemd/
-cp config/sshd_config /etc/ssh/
+cp config/common/sleep.conf /etc/systemd/
+cp config/common/sshd_config /etc/ssh/
 cp config/common/sysctl.conf /etc/
 
 apt clean

@@ -17,7 +17,7 @@ Usage() {
   exit 1
 }
 
-if [ $# -eq 2 ]; then
+if [ $# -ge 2 ]; then
   if [ $2 -gt 0 ]; then
     SIZE=$2
   else
