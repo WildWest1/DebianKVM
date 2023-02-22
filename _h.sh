@@ -57,11 +57,6 @@ grub-install --target=x86_64-efi
 update-grub
 cp /boot/efi/EFI/debian/fbx64.efi /boot/efi/EFI/BOOT/bootx64.efi
 
-# Host fixes for production
-cp config/common/sleep.conf /etc/systemd/
-cp config/common/sshd_config /etc/ssh/
-cp config/common/sysctl.conf /etc/
-
 apt clean
 apt autoremove
 rm -rf /tmp/* ~/.bash_history

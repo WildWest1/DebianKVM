@@ -38,21 +38,20 @@ if [[ "$FILENAME" =~ "." ]]; then
   fi
 fi
 
-# SETUP HOST AS KVM SERVER
-apt update
-[ $? -ne 0 ] && echo "Unable to update apt" && exit 1
-apt install -y systemd parallel rsync pciutils usbutils
-[ $? -ne 0 ] &&	echo "Failed to install apps, no internet?" && exit 1
-
+# SETUP HOST AS KVM SERVER - UNCOMMENT IF YOU WANT TO RUN LOCALLY INSTEAD OF BOOTING FROM FLASH DRIVE
+#apt update
+#[ $? -ne 0 ] && echo "Unable to update apt" && exit 1
+#apt install -y systemd parallel rsync pciutils usbutils
+#[ $? -ne 0 ] &&	echo "Failed to install apps, no internet?" && exit 1
 # INSTALL KVM
-apt install -y qemu-system-x86 libvirt-daemon-system libvirt-clients bridge-utils virtinst libvirt-daemon libguestfs-tools virt-manager
-[ $? -ne 0 ] && echo "Failed to install KVM, no internet?" && exit 1
+#apt install -y qemu-system-x86 libvirt-daemon-system libvirt-clients bridge-utils virtinst libvirt-daemon libguestfs-tools virt-manager
+#[ $? -ne 0 ] && echo "Failed to install KVM, no internet?" && exit 1
 
 
 # First detach and remove any existing image file by this name
 echo -e "${RED}Checking for existing file and removing if found...${NONE}"
 if [ -f "$FILENAME" ]; then
-  read -p "Existing image found, do you want to delete (Y/N): " CONFIRM && [[ $CONFIRM == [yY] || $CONFIRM == [yY][eE][sS] ]] && ./detach.sh && rm $FILENAME || exit 1
+  read -p "Existing image found, do you want to delete (Y/N): " CONFIRM && [[ $CONFIRM == [yY] || $CONFIRM == [yY][eE][sS] ]] && rm $FILENAME || exit 1
 fi
 
 echo -e "--------------------\nFile: ${FILENAME}\nType: ${TYPE}\nSize: ${SIZE}\n--------------------\n"
@@ -119,6 +118,12 @@ debootstrap --variant=minbase --arch amd64 stable root http://deb.debian.org/deb
 FILE="_g.sh"
 [ "$TYPE" == "raw" ] && FILE="_h.sh"
 cp ${FILE} root/root/ && chroot root /root/${FILE}
+
+# Disable sleep, enable SSH server, and enable forwarding
+cp config/common/sleep.conf /etc/systemd/
+cp config/common/sshd_config /etc/ssh/
+cp config/common/sysctl.conf /etc/
+
 
 [ $DETACH -eq 1 ] && ./detach.sh
 

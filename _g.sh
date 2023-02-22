@@ -35,11 +35,6 @@ update-grub
 ### ENABLE SERVICES
 ln -s /lib/systemd/system/nftables.service /etc/systemd/system/multi-user.target.wants/nftables.service
 
-# Host fixes for production
-cp config/common/sleep.conf /etc/systemd/
-cp config/common/sshd_config /etc/ssh/
-cp config/common/sysctl.conf /etc/
-
 echo -e "password\npassword" | passwd
 apt clean
 apt autoremove

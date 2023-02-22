@@ -14,11 +14,12 @@ usb: host.img
 	./make_bootable_usb.sh host.img
 
 guest.qcow2:
-	# Just run the setup with defaults
+	# Making guest.qcow2
 	./setup.sh guest.qcow2 2
 
 host.img: guest.qcow2
-	# Make a bootable usb host vm that contains a guest vm
+	# Making a bootable usb from host.img that contains a guest.qcow2
+	@echo "Making host.img..."
 	@./setup.sh host.img 30 nodetach; \
 	if [ $$? -eq 0 ]; then  \
 		echo "Makefile copying guest.qcow2 to host..." ; \
