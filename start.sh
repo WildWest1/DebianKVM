@@ -127,7 +127,7 @@ GuestExists
 
 StartDefaultNetwork
 
-# Add NAT for internet on wiri
+# Add NAT for internet on wiri (replace wlp2s0 with your internet connected nic)
 nft add rule nat POSTROUTING oif wlp2s0 masquerade >/dev/null 2>&1
 
 ##### INTSTALL #####

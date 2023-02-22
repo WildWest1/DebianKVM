@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# THIS FILE SETS UP A BASE IMAGE, AND THEN BUILDS A HOST OR GUEST BY THE NAME AND SIZE SPECIFIED
+# RUN THIS IF YOU WANT TO CREATE CUSTOM IMAGES, OTHERWISE USE make host OR make guest
+
 # Defaults if no params
 FILENAME="guest.qcow2"
 SIZE=2	# 2GB is minimum required
@@ -38,20 +41,10 @@ if [[ "$FILENAME" =~ "." ]]; then
   fi
 fi
 
-# SETUP HOST AS KVM SERVER - UNCOMMENT IF YOU WANT TO RUN LOCALLY INSTEAD OF BOOTING FROM FLASH DRIVE
-#apt update
-#[ $? -ne 0 ] && echo "Unable to update apt" && exit 1
-#apt install -y systemd parallel rsync pciutils usbutils
-#[ $? -ne 0 ] &&	echo "Failed to install apps, no internet?" && exit 1
-# INSTALL KVM
-#apt install -y qemu-system-x86 libvirt-daemon-system libvirt-clients bridge-utils virtinst libvirt-daemon libguestfs-tools virt-manager
-#[ $? -ne 0 ] && echo "Failed to install KVM, no internet?" && exit 1
-
-
 # First detach and remove any existing image file by this name
-echo -e "${RED}Checking for existing file and removing if found...${NONE}"
+echo -e "Checking for existing file and removing if found..."
 if [ -f "$FILENAME" ]; then
-  read -p "Existing image found, do you want to delete (Y/N): " CONFIRM && [[ $CONFIRM == [yY] || $CONFIRM == [yY][eE][sS] ]] && rm $FILENAME || exit 1
+  read -p "Existing image found, do you want to delete? (Y/N): " CONFIRM && [[ $CONFIRM == [yY] || $CONFIRM == [yY][eE][sS] ]] && rm $FILENAME || exit 1
 fi
 
 echo -e "--------------------\nFile: ${FILENAME}\nType: ${TYPE}\nSize: ${SIZE}\n--------------------\n"
