@@ -30,7 +30,7 @@ NONE='\033[0m' # Return to default
 
 BLINK_CURSOR="\033[47;05;40m_\033[00m"
 
-rm /tmp/error
+rm -f /tmp/error
 function ErrorTest {
   if [ $? -ne 0 ]; then
     cat -n /tmp/error

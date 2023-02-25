@@ -1,23 +1,24 @@
 #!/bin/bash
 
 # CREATES A COMPLETELY TEMPORARY NETWORK AND VMS IN RAM
-# r destroys all instantly
-# p makes pesistent vms
+# Run a second time to destroy all
+# p makes pesistent vms that will remain after reboot
 
 VMDIR="/var/ramdisk"
 MOUNTPT="/mnt"
-BLINK_STATUS="[$BLINK_CURSOR$BLINK_CURSOR$BLINK_CURSOR$BLINK_CURSOR$BLINK_CURSOR$BLINK_CURSOR$BLINK_CURSOR]"
 SHOW_STATUS=1
-
+GATEWAY_NIC=wlp42s0  # My laptop wifi with internet, add nic as param or set here (nothing else needs set)
 PERSISTENT=0
-REMOVE=0
 
 . common.sh
+BLINK_STATUS="[$BLINK_CURSOR$BLINK_CURSOR$BLINK_CURSOR$BLINK_CURSOR$BLINK_CURSOR$BLINK_CURSOR$BLINK_CURSOR]"
 
 # GET ARGS
-[ "$1" == "p" ] || [ "$2" == "p" ] && PERSISTENT=1
-[ "$1" == "r" ] || [ "$2" == "r" ] && REMOVE=1
-
+[ ! -z $1 ] && GATEWAY_NIC=$1
+if [ "$2" == "p" ]; then
+  PERSISTENT=1
+  VMDIR="/var/lib/libvirt/images"
+fi
 
 # FUNCTIONS...
 
@@ -72,8 +73,6 @@ function CopyIn {
     cp config/$HOST/vpn-auth $MOUNTPT/etc/openvpn
     cp config/$HOST/vpn.ovpn $MOUNTPT/etc/openvpn
     cp config/$HOST/rc.local $MOUNTPT/etc/
-    #cp config/$HOST/startup.service $MOUNTPT/lib/systemd/system/
-    #cp $MOUNTPT/lib/systemd/system/startup.service $MOUNTPT/etc/systemd/system/multi-user.target.wants/
   fi
   if [ "$HOST" == "guest4" ]; then
     # ADD DNS SERVER:
@@ -86,15 +85,13 @@ function CopyIn {
     cp config/common/resolv.conf $MOUNTPT/etc/resolv.host
     cp config/$HOST/resolv.conf $MOUNTPT/etc/
     cp config/$HOST/rc.local $MOUNTPT/etc/
-    #cp config/$HOST/startup.service $MOUNTPT/lib/systemd/system/
-    #cp $MOUNTPT/lib/systemd/system/startup.service $MOUNTPT/etc/systemd/system/multi-user.target.wants/
   fi
   umount $MOUNTPT
 }
 
 function CreateBridge {
   ip link add vrbr192 type bridge >/dev/null 2>&1
-  ip link set enx00e04c680c11 master vrbr192 >/dev/null 2>&1
+  #ip link set enp43s0 master vrbr192 >/dev/null 2>&1
   ip address add dev vrbr192 192.168.255.1/24 >/dev/null 2>&1
   ip link set vrbr192 up >/dev/null 2>&1
 }
@@ -128,7 +125,13 @@ GuestExists
 StartDefaultNetwork
 
 # Add NAT for internet on wiri (replace wlp2s0 with your internet connected nic)
-nft add rule nat POSTROUTING oif wlp2s0 masquerade >/dev/null 2>&1
+nft add rule nat POSTROUTING oif $GATEWAY_NIC masquerade >/dev/null 2>&1
+if [ $? -ne 0 ]; then
+  echo
+  echo -e "${RED}Error: Change start.sh to include the interface name that is your gateway interface$NONE"
+  echo
+  exit 1
+fi
 
 ##### INTSTALL #####
 echo "########## VM SETUP SCRIPT ##########"
@@ -171,7 +174,7 @@ ErrorCheck
 echo -ne "BRIDGE IPS:\t\t"
 ip address del 172.16.16.1/24 dev virbr172 >/dev/null 2>/tmp/error
 ip route add 172.16.16.0/24 via 10.0.0.2 >/dev/null 2>/tmp/error
-#ip a add 192.168.255.254/24 dev enx00e04c680c11
+#ip a add 192.168.255.254/24 dev enp43s0
 # REPLACE VIRSH 192 BRIDGE WITH USB ETHERNET PORT AS BRIDGE
 ErrorCheck
 
@@ -181,3 +184,4 @@ echo
 virsh net-list --all
 virsh list --all
 echo "********************************************"
+echo -e "Run ${YELLOW}./addtobridge.sh ethX${NONE} if you want join bridge vrbr192 to connect a Raspberry Pi, for example"

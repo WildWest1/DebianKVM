@@ -114,7 +114,7 @@ if [ "$TYPE" == "raw" ]; then
   # Add KVM hosting scripts and files
   cp *.sh root/root/
   cp -r config root/root/
-}
+fi
 cp ${FILE} root/root/ && chroot root /root/${FILE}
 
 # Disable sleep, enable SSH server, and enable forwarding
