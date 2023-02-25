@@ -20,7 +20,7 @@ guest.qcow2:
 host.img: guest.qcow2
 	# Making a bootable usb from host.img that contains a guest.qcow2
 	@echo "Making host.img..."
-	@./setup.sh host.img 30 nodetach; \
+	@./setup.sh host.img 100 nodetach; \
 	if [ $$? -eq 0 ]; then  \
 		echo "Makefile copying guest.qcow2 to host..." ; \
 		cp guest.qcow2 root/root ; \

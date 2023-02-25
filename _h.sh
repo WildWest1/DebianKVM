@@ -24,14 +24,13 @@ mkdir -p /var/ramdisk
 mount -a
 
 # DEBIAN
-echo "deb http://deb.debian.org/debian bullseye main contrib non-free
-deb http://deb.debian.org/debian bullseye-updates main contrib non-free
-deb http://deb.debian.org/debian bullseye-backports main contrib non-free
-deb http://security.debian.org/debian-security/ bullseye-security main contrib non-free" > /etc/apt/sources.list
+echo -e "deb http://deb.debian.org/debian bullseye main contrib non-free\ndeb http://deb.debian.org/debian bullseye-updates main contrib non-free\ndeb http://deb.debian.org/debian-security/ bullseye-security main contrib non-free\ndeb http://ftp.us.debian.org/debian/ testing main contrib non-free\n" > /etc/apt/sources.list
 
 apt update
+apt -y dist-upgrade
+apt autoremove
 
-apt install -y linux-image-amd64 systemd wget sudo nano net-tools iproute2 nftables dnsutils ifupdown openssh-server ssh inetutils-ping ncat parallel rsync intel-microcode pciutils usbutils build-essential lsof
+apt install -y linux-image-amd64 systemd wget sudo nano net-tools iproute2 nftables dnsutils ifupdown openssh-server ssh inetutils-ping ncat parallel rsync intel-microcode pciutils usbutils build-essential lsof git build-essential
 
 # INSTALL KVM
 apt install -y qemu-system-x86 libvirt-daemon-system libvirt-clients bridge-utils virtinst libvirt-daemon libguestfs-tools
@@ -56,6 +55,10 @@ mkdir -p /boot/efi/EFI/BOOT
 grub-install --target=x86_64-efi
 update-grub
 cp /boot/efi/EFI/debian/fbx64.efi /boot/efi/EFI/BOOT/bootx64.efi
+
+# WIFI, RAID, THUNDERBOLT FOR INTEL GEN12
+apt install -y bolt firmware-misc-nonfree thunderbolt-tools lshw inxi dmraid firmware-linux
+apt install -y  wpasupplicant wireless-tools firmware-atheros
 
 apt clean
 apt autoremove

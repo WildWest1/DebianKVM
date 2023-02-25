@@ -28,6 +28,17 @@ LTCYAN='\033[1;36m'
 WHITE='\033[1;37m'
 NONE='\033[0m' # Return to default
 
+BLINK_CURSOR="\033[47;05;40m_\033[00m"
+
+rm /tmp/error
+function ErrorTest {
+  if [ $? -ne 0 ]; then
+    cat -n /tmp/error
+    echo
+    exit 1
+  fi
+}
+
 TYPE="qcow2"
 GetVmFileType() {
     RSTATUS=1 # FAILED TO GET TYPE

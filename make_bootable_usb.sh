@@ -88,7 +88,7 @@ function IsYes {
 
 # Drive exists
 echo Flash drive found in /dev/sdb!
-PARTS=$(blkid | grep sdc | awk '{ print $1 }' | cut -c 1-9)
+PARTS=$(blkid | grep sdb | awk '{ print $1 }' | cut -c 1-9)
 if [ -n "$PARTS" ]; then
   echo Flash drive has partitions: $PARTS
   while true
@@ -98,7 +98,7 @@ if [ -n "$PARTS" ]; then
     IsYes "$REPLY"
     [ $? -eq 0 ] && break || sleep 1
   done
-  MOUNTS=$(mount | grep sdc | awk '{ print $1 }')
+  MOUNTS=$(mount | grep sdb | awk '{ print $1 }')
   for USB in $MOUNTS ; do
     echo Unmounting ${USB}...
     $(umount $USB)

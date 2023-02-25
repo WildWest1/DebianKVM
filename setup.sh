@@ -109,14 +109,18 @@ debootstrap --variant=minbase --arch amd64 stable root http://deb.debian.org/deb
 
 # Copy scripts and launch inside chroot
 FILE="_g.sh"
-[ "$TYPE" == "raw" ] && FILE="_h.sh"
+if [ "$TYPE" == "raw" ]; then
+  FILE="_h.sh"
+  # Add KVM hosting scripts and files
+  cp *.sh root/root/
+  cp -r config root/root/
+}
 cp ${FILE} root/root/ && chroot root /root/${FILE}
 
 # Disable sleep, enable SSH server, and enable forwarding
 cp config/common/sleep.conf /etc/systemd/
 cp config/common/sshd_config /etc/ssh/
 cp config/common/sysctl.conf /etc/
-
 
 [ $DETACH -eq 1 ] && ./detach.sh
 
