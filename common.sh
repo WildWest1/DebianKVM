@@ -57,5 +57,5 @@ GetVmFileType() {
             fi
         fi
     fi
-    return RSTATUS
+    return $RSTATUS
 }

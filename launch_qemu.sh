@@ -4,7 +4,6 @@
 # USE DEPLOY.SH INSTEAD - Qemu launched vms not register with virsh
 
 FILENAME=$1
-TYPE=qcow2
 
 . ./common.sh
 
