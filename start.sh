@@ -1,17 +1,19 @@
 #!/bin/bash
 
-# CREATES A COMPLETELY TEMPORARY NETWORK AND VMS IN RAM
+# CREATES A COMPLETELY TEMPORARY NETWORK AND VMS IN RAM BY DEFAULT FOR RAPID TESTING
+# Add -p param to install vms persistently
 # Run a second time to destroy all
 # p makes pesistent vms that will remain after reboot
 
 VMDIR="/var/ramdisk"
 MOUNTPT="/mnt"
 SHOW_STATUS=1
-GATEWAY_NIC=wlp42s0  # My laptop wifi with internet, add nic as param or set here (nothing else needs set)
+GATEWAY_NIC="wlp42s0"  # My laptop wifi with internet, add nic as param or set here (nothing else needs set)
 PERSISTENT=0
-
+RAMDISK_SIZE="10G"
 . common.sh
 BLINK_STATUS="[$BLINK_CURSOR$BLINK_CURSOR$BLINK_CURSOR$BLINK_CURSOR$BLINK_CURSOR$BLINK_CURSOR$BLINK_CURSOR]"
+XMLPATH=
 
 # GET ARGS
 [ ! -z $1 ] && GATEWAY_NIC=$1
@@ -22,7 +24,24 @@ fi
 
 # FUNCTIONS...
 
-function ErrorCheck {
+CreateRamdisk() {
+  # Don't create ramdisk if persistent, use permanent storage, default vm location...
+  if [ $PERSISTENT -eq 0 ]; then
+    # Create and Mount Ramdisk - it is dynamic and will be deleted when shutdown occurs
+    if [ ! -d $VMDIR ]; then
+      echo -n "Create $RAMDISK_SIZE ramdisk: $VMDIR ->  "
+      mkdir -p $VMDIR
+      mount -t tmpfs -o size=$RAMDISK_SIZE tmpfs $VMDIR
+      [ $? -ne 0 ] && echo "Failed!" && exit 1 || echo "Success!"
+    else
+      echo "Ramdisk directory already exists - it will get erased at shutdown!"
+    fi
+  else
+    echo "Using persistent storage: $VMDIR"
+  fi
+}
+
+ErrorCheck() {
   if [ $? -eq 0 ]; then
     [ "$SHOW_STATUS" -eq 1 ] && echo "[Success]"
   else
@@ -33,7 +52,7 @@ function ErrorCheck {
   fi
 }
 
-function Delete {
+Delete() {
   SHOW_STATUS=0
   echo
   read -p "VMs are running, STOP or RESTART? (Y/N): " CONFIRM && [[ $CONFIRM == [yY] || $CONFIRM == [yY][eE][sS] ]] && echo || exit 0
@@ -48,6 +67,15 @@ function Delete {
     virsh net-undefine net10 >/dev/null 2>/tmp/error ; virsh net-undefine net172 >/dev/null 2>/tmp/error ; virsh net-undefine net192 >/dev/null 2>/tmp/error ; virsh net-undefine br192 >/dev/null 2>/tmp/error
     virsh undefine guest2 >/dev/null 2>/tmp/error ; virsh undefine guest3 >/dev/null 2>/tmp/error ; virsh undefine guest4 >/dev/null 2>/tmp/error
   fi
+  # Remove Ramdisk - it will be created and destroyed every time
+  if [ $VMDIR == '/var/ramdisk' ]; then
+    # Only delete if it is the temporary storage
+    rm -f $VMDIR/*
+    umount $VMDIR
+    rmdir $VMDIR
+  else
+    echo "VM's remain in $VMDIR"
+  fi
   ip link del vrbr192
   ErrorCheck
   nft flush ruleset
@@ -55,7 +83,7 @@ function Delete {
   [ $RESTARTING -eq 0 ] && exit 0 || SHOW_STATUS=1
 }
 
-function CopyIn {
+CopyIn() {
   HOST=$1
   guestmount -a $VMDIR/$HOST.qcow2 -i $MOUNTPT
   cp config/$HOST/hostname $MOUNTPT/etc/
@@ -86,24 +114,27 @@ function CopyIn {
     cp config/$HOST/resolv.conf $MOUNTPT/etc/
     cp config/$HOST/rc.local $MOUNTPT/etc/
   fi
+  # Copy experimental programs
+  mkdir $MOUNTPT/root/CPrograms
+  cp CPrograms/* $MOUNTPT/root/CPrograms/
   umount $MOUNTPT
 }
 
-function CreateBridge {
+CreateBridge() {
   ip link add vrbr192 type bridge >/dev/null 2>&1
   #ip link set enp43s0 master vrbr192 >/dev/null 2>&1
   ip address add dev vrbr192 192.168.255.1/24 >/dev/null 2>&1
   ip link set vrbr192 up >/dev/null 2>&1
 }
 
-function IsRunning {
+IsRunning() {
+  GetXmlPath
   virsh domstate guest2 >/dev/null 2>&1
   GUESTEXISTS=$?
   virsh net-info br192 >/dev/null 2>&1
   NETEXISTS=$?
   [[ $GUESTEXISTS -eq 0 || NETEXISTS -eq 0 ]] && Delete
 }
-
 
 GuestExists() {
   FOUND=0
@@ -113,29 +144,43 @@ GuestExists() {
 
 StartDefaultNetwork() {
   virsh net-start default >/dev/null 2>&1
+  #[ $? -ne 0 ] && echo "Error: Could not start default network" && exit 1 || echo "Started default network..."
+}
+
+NatSetup() {
+# Add NAT for internet on wifi (replace $GATEWAY_NIC variable with your internet connected nic)
+  nft add rule nat POSTROUTING oif $GATEWAY_NIC masquerade >/dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo
+    echo -e "${YELLOW}Error: Change start.sh to include the interface name that is your gateway interface$NONE"
+    echo
+    exit 1
+  fi
+}
+
+UpdateXmlConfig() {
+  # Runs a python script that updates the vm directory in the virsh config
+  python updatexml.py config/guest2/vm.xml $VMDIR/guest2.qcow2 >/dev/null
+  python updatexml.py config/guest3/vm.xml $VMDIR/guest3.qcow2 >/dev/null
+  python updatexml.py config/guest4/vm.xml $VMDIR/guest4.qcow2 >/dev/null
+}
+
+GetXmlPath() {
+  XMLPATH=$(virsh domblklist guest3| awk 'FNR>0{print $2}' | tail -n+2)
+  [[ $XMLPATH == */images/* ]] && PERSISTENT=1 && VMDIR="/var/lib/libvirt/images"
 }
 
 ################ SCRIPT STARTS HERE #################
 
 ##### RESTART/DELETE IF RUNNING #####
-IsRunning
-
-GuestExists
-
+IsRunning	# Will offer to shutdown or restart if running
+GuestExists	# Will create guest if it doesn't exist
 StartDefaultNetwork
-
-# Add NAT for internet on wiri (replace wlp2s0 with your internet connected nic)
-nft add rule nat POSTROUTING oif $GATEWAY_NIC masquerade >/dev/null 2>&1
-if [ $? -ne 0 ]; then
-  echo
-  echo -e "${RED}Error: Change start.sh to include the interface name that is your gateway interface$NONE"
-  echo
-  exit 1
-fi
+NatSetup
 
 ##### INTSTALL #####
 echo "########## VM SETUP SCRIPT ##########"
-echo
+CreateRamdisk
 echo -ne "CREATING VNETS:\t\t"
 CreateBridge
 if [ $PERSISTENT -eq 1 ]; then
@@ -162,6 +207,7 @@ echo -ne "\b\b\b\b\b\b\b\b\b"
 ErrorCheck
 
 echo -ne "VIRSH CREATE VMS:\t$BLINK_STATUS"
+UpdateXmlConfig		# Python script that updates the filename within the xml every time
 if [ $PERSISTENT == 1 ]; then
   virsh define config/guest2/vm.xml >/dev/null 2>/tmp/error && virsh define config/guest3/vm.xml >/dev/null 2>/tmp/error && virsh define config/guest4/vm.xml >/dev/null 2>/tmp/error
   virsh start guest2 >/dev/null 2>/tmp/error && virsh start guest3 >/dev/null 2>/tmp/error && virsh start guest4 >/dev/null 2>/tmp/error 
@@ -184,4 +230,6 @@ echo
 virsh net-list --all
 virsh list --all
 echo "********************************************"
+echo
 echo -e "Run ${YELLOW}./addtobridge.sh ethX${NONE} if you want join bridge vrbr192 to connect a Raspberry Pi, for example"
+echo

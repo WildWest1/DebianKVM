@@ -5,7 +5,7 @@
 
 # Defaults if no params
 FILENAME="guest.qcow2"
-SIZE=2	# 2GB is minimum required
+SIZE=3	# 3GB is minimum required
 TYPE="qcow2"
 DETACH=1
 

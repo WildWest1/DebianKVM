@@ -11,17 +11,19 @@ cd /root
 LANG=C.UTF-8
 
 # UPDATE SOURCES
-echo -e "deb http://deb.debian.org/debian bullseye main contrib non-free\ndeb http://deb.debian.org/debian bullseye-updates main contrib non-free\ndeb http://deb.debian.org/debian bullseye-backports main contrib non-free\ndeb http://security.debian.org/debian-security/ bullseye-security main contrib non-free" > /etc/apt/sources.list
+#echo -e "deb http://deb.debian.org/debian bullseye main contrib non-free\ndeb http://deb.debian.org/debian bullseye-updates main contrib non-free\ndeb http://deb.debian.org/debian bullseye-backports main contrib non-free\ndeb http://security.debian.org/debian-security/ bullseye-security main contrib non-free" > /etc/apt/sources.list
 
 # DEBIAN TESTING
-#echo -e "deb http://deb.debian.org/debian bullseye main contrib non-free\ndeb http://deb.debian.org/debian bullseye-updates main contrib non-free\ndeb http://deb.debian.org/debian-security/ bullseye-security main contrib non-free\ndeb http://ftp.us.debian.org/debian/ testing main contrib non-free\n" > /etc/apt/sources.list
+echo -e "deb http://deb.debian.org/debian bullseye main contrib non-free\ndeb http://deb.debian.org/debian bullseye-updates main contrib non-free\ndeb http://deb.debian.org/debian-security/ bullseye-security main contrib non-free\ndeb http://ftp.us.debian.org/debian/ testing main contrib non-free\n" > /etc/apt/sources.list
 
 apt update
+apt -y dist-upgrade
+apt autoremove
 
 # INSTALL KERNEL
 apt install -y linux-image-amd64
 # INSTALL APPS
-apt install -y init iproute2 ifupdown nftables ssh iputils-ping sudo nano wget ncat dnsutils
+apt install -y iproute2 ifupdown nftables ssh iputils-ping sudo nano wget ncat dnsutils build-essential openssl libssl-dev tcpdump nmap
 # INSTALL GRUB2 BOOTLOADER
 apt install -y grub2
 

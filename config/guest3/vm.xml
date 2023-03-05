@@ -1,84 +1,84 @@
-<domain type='kvm'>
+<domain type="kvm">
   <name>guest3</name>
   <uuid>e528e7c3-b999-4010-8679-05fe167c0003</uuid>
-  <memory unit='KiB'>1048576</memory>
-  <currentMemory unit='KiB'>1048576</currentMemory>
-  <vcpu placement='static'>1</vcpu>
+  <memory unit="KiB">1048576</memory>
+  <currentMemory unit="KiB">1048576</currentMemory>
+  <vcpu placement="static">1</vcpu>
   <os>
-    <type arch='x86_64' machine='pc-i440fx-5.2'>hvm</type>
-    <boot dev='hd'/>
+    <type arch="x86_64" machine="pc-i440fx-5.2">hvm</type>
+    <boot dev="hd" />
   </os>
   <features>
-    <acpi/>
-    <apic/>
+    <acpi />
+    <apic />
   </features>
-  <cpu mode='host-model' check='partial'/>
-  <clock offset='utc'>
-    <timer name='rtc' tickpolicy='catchup'/>
-    <timer name='pit' tickpolicy='delay'/>
-    <timer name='hpet' present='no'/>
+  <cpu check="partial" mode="host-model" />
+  <clock offset="utc">
+    <timer name="rtc" tickpolicy="catchup" />
+    <timer name="pit" tickpolicy="delay" />
+    <timer name="hpet" present="no" />
   </clock>
   <on_poweroff>destroy</on_poweroff>
   <on_reboot>restart</on_reboot>
   <on_crash>destroy</on_crash>
   <pm>
-    <suspend-to-mem enabled='no'/>
-    <suspend-to-disk enabled='no'/>
+    <suspend-to-mem enabled="no" />
+    <suspend-to-disk enabled="no" />
   </pm>
   <devices>
     <emulator>/usr/bin/qemu-system-x86_64</emulator>
-    <disk type='file' device='disk'>
-      <driver name='qemu' type='qcow2'/>
-      <source file='/var/ramdisk/guest3.qcow2'/>
-      <target dev='vda' bus='virtio'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x05' function='0x0'/>
+    <disk device="disk" type="file">
+      <driver name="qemu" type="qcow2" />
+      <source file="/var/ramdisk/guest3.qcow2" />
+      <target bus="virtio" dev="vda" />
+      <address bus="0x00" domain="0x0000" function="0x0" slot="0x05" type="pci" />
     </disk>
-    <controller type='usb' index='0' model='ich9-ehci1'>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x7'/>
+    <controller index="0" model="ich9-ehci1" type="usb">
+      <address bus="0x00" domain="0x0000" function="0x7" slot="0x04" type="pci" />
     </controller>
-    <controller type='usb' index='0' model='ich9-uhci1'>
-      <master startport='0'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0' multifunction='on'/>
+    <controller index="0" model="ich9-uhci1" type="usb">
+      <master startport="0" />
+      <address bus="0x00" domain="0x0000" function="0x0" multifunction="on" slot="0x04" type="pci" />
     </controller>
-    <controller type='usb' index='0' model='ich9-uhci2'>
-      <master startport='2'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x1'/>
+    <controller index="0" model="ich9-uhci2" type="usb">
+      <master startport="2" />
+      <address bus="0x00" domain="0x0000" function="0x1" slot="0x04" type="pci" />
     </controller>
-    <controller type='usb' index='0' model='ich9-uhci3'>
-      <master startport='4'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x2'/>
+    <controller index="0" model="ich9-uhci3" type="usb">
+      <master startport="4" />
+      <address bus="0x00" domain="0x0000" function="0x2" slot="0x04" type="pci" />
     </controller>
-    <controller type='pci' index='0' model='pci-root'/>
-    <interface type='network'>
-      <mac address='52:54:00:aa:b8:bb'/>
-      <source network='default'/>
-      <model type='e1000'/>
-      <address type='pci' domain='0x0000' bus='0x01' slot='0x01' function='0x0'/>
+    <controller index="0" model="pci-root" type="pci" />
+    <interface type="network">
+      <mac address="52:54:00:aa:b8:bb" />
+      <source network="default" />
+      <model type="e1000" />
+      <address bus="0x01" domain="0x0000" function="0x0" slot="0x01" type="pci" />
     </interface>
-    <interface type='network'>
-      <mac address='52:54:00:7a:0d:bb'/>
-      <source network='net10'/>
-      <model type='e1000'/>
-      <address type='pci' domain='0x0000' bus='0x01' slot='0x02' function='0x0'/>
+    <interface type="network">
+      <mac address="52:54:00:7a:0d:bb" />
+      <source network="net10" />
+      <model type="e1000" />
+      <address bus="0x01" domain="0x0000" function="0x0" slot="0x02" type="pci" />
     </interface>
-    <interface type='network'>
-      <mac address='52:54:00:20:02:bb'/>
-      <source network='net172'/>
-      <model type='e1000'/>
-      <address type='pci' domain='0x0000' bus='0x01' slot='0x03' function='0x0'/>
+    <interface type="network">
+      <mac address="52:54:00:20:02:bb" />
+      <source network="net172" />
+      <model type="e1000" />
+      <address bus="0x01" domain="0x0000" function="0x0" slot="0x03" type="pci" />
     </interface>
-    <serial type='pty'>
-      <target type='isa-serial' port='0'>
-        <model name='isa-serial'/>
+    <serial type="pty">
+      <target port="0" type="isa-serial">
+        <model name="isa-serial" />
       </target>
     </serial>
-    <console type='pty'>
-      <target type='serial' port='0'/>
+    <console type="pty">
+      <target port="0" type="serial" />
     </console>
-    <input type='mouse' bus='ps2'/>
-    <input type='keyboard' bus='ps2'/>
-    <memballoon model='virtio'>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x06' function='0x0'/>
+    <input bus="ps2" type="mouse" />
+    <input bus="ps2" type="keyboard" />
+    <memballoon model="virtio">
+      <address bus="0x00" domain="0x0000" function="0x0" slot="0x06" type="pci" />
     </memballoon>
   </devices>
 </domain>

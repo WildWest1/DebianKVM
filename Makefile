@@ -15,7 +15,7 @@ usb: host.img
 
 guest.qcow2:
 	# Making guest.qcow2
-	./setup.sh guest.qcow2 2
+	./setup.sh guest.qcow2 3
 
 host.img: guest.qcow2
 	# Making a bootable usb from host.img that contains a guest.qcow2

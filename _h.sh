@@ -16,8 +16,8 @@ efi_uuid="$(blkid | grep '^/dev/nbd0' | grep ' LABEL="EFI" ' | grep -o ' UUID="[
 echo -e "# /etc/fstab: static file system information.
 # <file system> <mount point>   <type>  <options>       <dump>  <pass>
 $root_uuid / ext4 errors=remount-ro 0 1
-$efi_uuid /boot/efi vfat defaults 0 1\n
-tmpfs /var/ramdisk tmpfs rw,nodev,nosuid,size=5G" > /etc/fstab
+$efi_uuid /boot/efi vfat defaults 0 1\n" > /etc/fstab
+#tmpfs /var/ramdisk tmpfs rw,nodev,nosuid,size=5G" > /etc/fstab
 
 mkdir -p /var/ramdisk
 [[ -d /boot/efi ]] || mkdir /boot/efi
@@ -30,7 +30,7 @@ apt update
 apt -y dist-upgrade
 apt autoremove
 
-apt install -y linux-image-amd64 systemd wget sudo nano net-tools iproute2 nftables dnsutils ifupdown openssh-server ssh inetutils-ping ncat parallel rsync intel-microcode pciutils usbutils build-essential lsof git build-essential
+apt install -y linux-image-amd64 systemd wget sudo nano net-tools iproute2 nftables dnsutils ifupdown openssh-server ssh inetutils-ping ncat parallel rsync intel-microcode pciutils usbutils build-essential lsof git build-essential openssl libssl-dev tcpdump nmap
 
 # INSTALL KVM
 apt install -y qemu-system-x86 libvirt-daemon-system libvirt-clients bridge-utils virtinst libvirt-daemon libguestfs-tools
