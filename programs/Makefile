@@ -1,4 +1,4 @@
-default: send rec
+default: send rec rec2
 
 #tlsrec: tlsrec.o
 
@@ -7,12 +7,16 @@ default: send rec
 
 send: send.o
 
-rec: rec.o
-
 send.o:
 
-rec.o:
+rec: rec.o
+
+rec.0:
+
+rec2: rec2.o
+
+rec2.o:
 
 clean:
-	@rm -f send.o send rec.o rec
+	@rm -f send.o send rec.o rec rec2 rec2.o
 	@echo Done!

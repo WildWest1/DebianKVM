@@ -23,7 +23,7 @@ apt autoremove
 # INSTALL KERNEL
 apt install -y linux-image-amd64
 # INSTALL APPS
-apt install -y iproute2 ifupdown nftables ssh iputils-ping sudo nano wget ncat dnsutils build-essential openssl libssl-dev tcpdump nmap socat libmed-tools
+apt install -y iproute2 ifupdown nftables ssh iputils-ping sudo nano wget ncat dnsutils build-essential openssl libssl-dev tcpdump nmap socat libmed-tools net-tools
 # INSTALL GRUB2 BOOTLOADER
 apt install -y grub2
 
