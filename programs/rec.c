@@ -6,6 +6,8 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <net/if.h>
+#include <signal.h>
+#include <unistd.h>
 
 #define MAX_BUF_LEN 1024
 #define MULTICAST_GROUP "239.0.0.1"
@@ -15,9 +17,38 @@ struct ifreq ifr;
 int sockfd;
 struct sockaddr_in addr;
 char buffer[MAX_BUF_LEN];
+const char *interface = "enp1s3";
+
+void sig_handler(int signum)
+{
+    switch (signum) {
+        case SIGINT:
+            printf("\nReceived SIGINT signal.\n");
+            break;
+        case SIGHUP:
+            printf("\nReceived SIGHUP signal.\n");
+            break;
+        case SIGTERM:
+            printf("\nReceived SIGTERM signal.\n");
+            break;
+        default:
+            printf("\nReceived unknown signal.\n");
+            break;
+    }
+    printf("Socket closing\n");
+    int i = close(sockfd);
+    if (i != 0) {
+        printf("Error: Could not close socket");
+    }
+    exit(0);
+}
 
 int main()
 {
+    signal(SIGINT, sig_handler);
+    signal(SIGHUP, sig_handler);
+    signal(SIGTERM, sig_handler);
+
     // Create a socket
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0) {
@@ -26,7 +57,6 @@ int main()
     }
 
     // Set to use interface enp1s3 only
-    const char *interface = "ens1p3";
     memset(&ifr, 0, sizeof(ifr));
     snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), interface);
     if (setsockopt(sockfd, SOL_SOCKET, SO_BINDTODEVICE, (void *)&ifr, sizeof(ifr)) < 0) {

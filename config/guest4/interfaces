@@ -16,4 +16,4 @@ iface enp1s3 inet static
 #  post-up /etc/bind/dns-installer
   #up ip route add default via 172.16.16.2 #ROUTING SERVER
   #up ip route add default via 172.16.16.3	#NAT SERVER
-up ip addr add 239.0.0.1/32 dev enp1s3 autojoin
+#up ip addr add 239.0.0.1/32 dev enp1s3 autojoin

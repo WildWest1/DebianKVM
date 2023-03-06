@@ -1,5 +1,8 @@
 #!/bin/bash
 
+nft add rule nat postrouting oif ens2 masquerade
+exit 0	# Disabled for now
+
 function Install {
   apt install -y openvpn resolvconf
   return $?

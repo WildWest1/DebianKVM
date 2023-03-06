@@ -14,4 +14,4 @@ iface enp1s3 inet static
   address 172.16.16.2/24
 
 up ip route add default via 10.0.0.1
-up ip addr add 239.0.0.1/32 dev enp1s3 autojoin
+#up ip addr add 239.0.0.1/32 dev enp1s3 autojoin

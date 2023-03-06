@@ -5,7 +5,7 @@
 # Run a second time to destroy all
 # p makes pesistent vms that will remain after reboot
 
-VMDIR="/var/ramdisk"
+VMDIR="/var/ramdisk_vm"
 MOUNTPT="/mnt"
 SHOW_STATUS=1
 GATEWAY_NIC="wlp42s0"  # My laptop wifi with internet, add nic as param or set here (nothing else needs set)
@@ -15,33 +15,34 @@ RAMDISK_SIZE="10G"
 BLINK_STATUS="[$BLINK_CURSOR$BLINK_CURSOR$BLINK_CURSOR$BLINK_CURSOR$BLINK_CURSOR$BLINK_CURSOR$BLINK_CURSOR]"
 XMLPATH=
 
-# GET ARGS
-[ ! -z $1 ] && GATEWAY_NIC=$1
-if [ "$2" == "p" ]; then
-  PERSISTENT=1
-  VMDIR="/var/lib/libvirt/images"
-fi
-
 # FUNCTIONS...
+
+CheckArgs() {
+  [ ! -z $1 ] && GATEWAY_NIC=$1
+  if [ "$2" == "p" ]; then
+    PERSISTENT=1
+    VMDIR="/var/lib/libvirt/images"
+  fi
+}
 
 CreateRamdisk() {
   # Don't create ramdisk if persistent, use permanent storage, default vm location...
   if [ $PERSISTENT -eq 0 ]; then
     # Create and Mount Ramdisk - it is dynamic and will be deleted when shutdown occurs
     if [ ! -d $VMDIR ]; then
-      echo -n "Create $RAMDISK_SIZE ramdisk: $VMDIR ->  "
+      #echo -n "$Ramdisk: RAMDISK_SIZE $VMDIR -> "
       mkdir -p $VMDIR
       mount -t tmpfs -o size=$RAMDISK_SIZE tmpfs $VMDIR
-      [ $? -ne 0 ] && echo "Failed!" && exit 1 || echo "Success!"
-    else
-      echo "Ramdisk directory already exists - it will get erased at shutdown!"
+      #[ $? -ne 0 ] && echo "Failed!" && exit 1 || echo "Success!"
+      [ $? -eq 0 ] && return 0 || return 1
     fi
-  else
-    echo "Using persistent storage: $VMDIR"
+  #else
+    #echo "Using persistent storage: $VMDIR"
   fi
 }
 
 ErrorCheck() {
+  echo -ne "\b\b\b\b\b\b\b\b\b"
   if [ $? -eq 0 ]; then
     [ "$SHOW_STATUS" -eq 1 ] && echo "[Success]"
   else
@@ -68,7 +69,7 @@ Delete() {
     virsh undefine guest2 >/dev/null 2>/tmp/error ; virsh undefine guest3 >/dev/null 2>/tmp/error ; virsh undefine guest4 >/dev/null 2>/tmp/error
   fi
   # Remove Ramdisk - it will be created and destroyed every time
-  if [ $VMDIR == '/var/ramdisk' ]; then
+  if [ $VMDIR == '/var/ramdisk_vm' ]; then
     # Only delete if it is the temporary storage
     rm -f $VMDIR/*
     umount $VMDIR
@@ -114,9 +115,9 @@ CopyIn() {
     cp config/$HOST/resolv.conf $MOUNTPT/etc/
     cp config/$HOST/rc.local $MOUNTPT/etc/
   fi
-  # Copy experimental programs
-  mkdir $MOUNTPT/root/CPrograms
-  cp CPrograms/* $MOUNTPT/root/CPrograms/
+  # Copy multicasting programs
+  mkdir $MOUNTPT/root/programs
+  cp programs/* $MOUNTPT/root/programs/
   umount $MOUNTPT
 }
 
@@ -166,22 +167,33 @@ UpdateXmlConfig() {
 }
 
 GetXmlPath() {
-  XMLPATH=$(virsh domblklist guest3| awk 'FNR>0{print $2}' | tail -n+2)
+  XMLPATH=$(virsh domblklist guest3 2>&1 | awk 'FNR>0{print $2}' | tail -n+2)
   [[ $XMLPATH == */images/* ]] && PERSISTENT=1 && VMDIR="/var/lib/libvirt/images"
 }
 
-################ SCRIPT STARTS HERE #################
 
-##### RESTART/DELETE IF RUNNING #####
+
+
+
+
+
+
+################ SCRIPT STARTS HERE #################
+CheckArgs
 IsRunning	# Will offer to shutdown or restart if running
 GuestExists	# Will create guest if it doesn't exist
 StartDefaultNetwork
 NatSetup
 
-##### INTSTALL #####
 echo "########## VM SETUP SCRIPT ##########"
+
+# CREATE RAMDISK
+echo -ne "CREATING RAMDISK:\t$BLINK_STATUS"
 CreateRamdisk
-echo -ne "CREATING VNETS:\t\t"
+ErrorCheck
+
+#CREATE VNETS
+echo -ne "CREATING VNETS:\t\t$BLINK_STATUS"
 CreateBridge
 if [ $PERSISTENT -eq 1 ]; then
   virsh net-define config/net10.xml >/dev/null 2>/tmp/error && virsh net-define config/net172.xml >/dev/null 2>/tmp/error && virsh net-define config/br192.xml >/dev/null 2>/tmp/error 
@@ -191,21 +203,24 @@ else
 fi
 ErrorCheck
 
-echo -ne "RESTARTING LIBVIRTD:\t"
+# RESTART LIBVIRTD
+echo -ne "RESTARTING LIBVIRTD:\t$BLINK_STATUS"
 [ -f /tmp/error ] && rm /tmp/error
-systemctl restart libvirtd ; sleep 2
+systemctl restart libvirtd
 ErrorCheck
+sleep 2	# Let libvirtd get started
 
+# COPY VMS
 echo -ne "COPYING VMS TO RAMDISK:\t$BLINK_STATUS"
 cp guest.qcow2 $VMDIR/guest2.qcow2 && parallel cp $VMDIR/guest2.qcow2 ::: $VMDIR/guest3.qcow2 $VMDIR/guest4.qcow2
-echo -ne "\b\b\b\b\b\b\b\b\b"
 ErrorCheck
 
+# COPY CONFIGS
 echo -ne "COPYING CONFIGS TO VMS:\t$BLINK_STATUS"
 CopyIn guest2 && CopyIn guest3 && CopyIn guest4
-echo -ne "\b\b\b\b\b\b\b\b\b"
 ErrorCheck
 
+# CREATE VMS
 echo -ne "VIRSH CREATE VMS:\t$BLINK_STATUS"
 UpdateXmlConfig		# Python script that updates the filename within the xml every time
 if [ $PERSISTENT == 1 ]; then
@@ -214,10 +229,10 @@ if [ $PERSISTENT == 1 ]; then
 else
   virsh create config/guest2/vm.xml >/dev/null 2>/tmp/error && virsh create config/guest3/vm.xml >/dev/null 2>/tmp/error && virsh create config/guest4/vm.xml >/dev/null 2>/tmp/error
 fi
-echo -ne "\b\b\b\b\b\b\b\b\b"
 ErrorCheck
 
-echo -ne "BRIDGE IPS:\t\t"
+# CREATE ROUTE TO VMS
+echo -ne "BRIDGE IPS:\t\t$BLINK_STATUS"
 ip address del 172.16.16.1/24 dev virbr172 >/dev/null 2>/tmp/error
 ip route add 172.16.16.0/24 via 10.0.0.2 >/dev/null 2>/tmp/error
 #ip a add 192.168.255.254/24 dev enp43s0

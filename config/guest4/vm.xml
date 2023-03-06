@@ -29,7 +29,7 @@
     <emulator>/usr/bin/qemu-system-x86_64</emulator>
     <disk device="disk" type="file">
       <driver name="qemu" type="qcow2" />
-      <source file="/var/ramdisk/guest4.qcow2" />
+      <source file="/var/ramdisk_vm/guest4.qcow2" />
       <target bus="virtio" dev="vda" />
       <address bus="0x00" domain="0x0000" function="0x0" slot="0x05" type="pci" />
     </disk>
