@@ -41,6 +41,10 @@ if [[ "$FILENAME" =~ "." ]]; then
   fi
 fi
 
+
+# INSTALL KVM
+apt install -y qemu-system-x86 libvirt-daemon-system libvirt-clients bridge-utils virtinst libvirt-daemon libguestfs-tools
+
 # First detach and remove any existing image file by this name
 echo -e "Checking for existing file and removing if found..."
 if [ -f "$FILENAME" ]; then
