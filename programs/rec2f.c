@@ -24,6 +24,21 @@ struct ifreq ifr;
 const char *interface = "ens1";
 struct ip_mreq mc_req;
 
+void receive_file(char* filename) {
+    int nbytes;
+    // Open the file for writing
+    FILE *fp;
+    fp = fopen(filename, "wb");
+    if (fp == NULL) {
+        perror("fopen");
+        exit(1);
+    }
+    // Receive packets and write them to the file
+    while ((nbytes = recv(sockfd, buffer, MAX_BUF_LEN, 0)) > 0) {
+        fwrite(buffer, 1, nbytes, fp);
+    }
+}
+
 void sig_handler(int signum)
 {
     switch (signum) {
@@ -65,7 +80,7 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    // Set to use interface enp1s3 only
+    // Set to use only one interface
     memset(&ifr, 0, sizeof(ifr));
     snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), interface);
     if (setsockopt(sockfd, SOL_SOCKET, SO_BINDTODEVICE, (void *)&ifr, sizeof(ifr)) < 0) {
@@ -84,34 +99,25 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
     
-
     // join multicast group
     mc_req.imr_multiaddr.s_addr = inet_addr(MULTICAST_GROUP);
     mc_req.imr_interface.s_addr = htonl(INADDR_ANY);
-
-    //memset(&multicast_addr, 0, sizeof(multicast_addr));
-    //multicast_addr.sin_family = AF_INET;
-    //multicast_addr.sin_addr.s_addr = inet_addr(MULTICAST_GROUP);
-    //multicast_addr.sin_port = htons(PORT);
-    
-    //if (setsockopt(sockfd, IPPROTO_IP, IP_ADD_MEMBERSHIP, &multicast_addr, sizeof(multicast_addr)) < 0) {
-    
     if (setsockopt(sockfd, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mc_req, sizeof(mc_req)) < 0) {
         perror("setsockopt");
         exit(EXIT_FAILURE);
     }
 
     // receive multicast messages
-    while (1) {
-        memset(buffer, 0, MAX_BUF_LEN);
-        recvlen = recvfrom(sockfd, buffer, MAX_BUF_LEN, 0, (struct sockaddr *)&multicast_addr, &addrlen);
-        if (recvlen < 0) {
-            perror("recvfrom");
-            exit(EXIT_FAILURE);
-        }
-        printf("Received %zd bytes from %s:%d: %s\n", recvlen, inet_ntoa(multicast_addr.sin_addr), ntohs(multicast_addr.sin_port), buffer);
+    memset(buffer, 0, MAX_BUF_LEN);
+    recvlen = recvfrom(sockfd, buffer, MAX_BUF_LEN, 0, (struct sockaddr *)&multicast_addr, &addrlen);
+    if (recvlen < 0) {
+        perror("recvfrom");
+        exit(EXIT_FAILURE);
     }
+    printf("Received %zd bytes from %s:%d: %s\n", recvlen, inet_ntoa(multicast_addr.sin_addr), ntohs(multicast_addr.sin_port), buffer);
+    receive_file(buffer);
 
+    // Finish
     close(sockfd);
     return 0;
 }

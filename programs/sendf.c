@@ -9,12 +9,39 @@
 
 #define MULTICAST_IP "239.0.0.1"
 #define PORT 8080
+#define MAX_BUF_LEN 1024
 
 int sockfd;
 struct sockaddr_in multicast_addr;
 struct ifreq ifr;
 const char *interface = "ens1";
 int ttl = 1;
+char buffer[MAX_BUF_LEN];
+
+void end() {
+    printf("Socket closing\n");
+    int i = close(sockfd);
+    if (i != 0) {
+        printf("Error: Could not close socket");
+    }
+    exit(0);
+}
+
+void sendFile(char* filename) {
+    int nbytes;
+    FILE *fp = fopen(filename, "rb");
+    if (fp == NULL) {
+        perror("fopen");
+        exit(1);
+    }
+    // Read the file and send its contents as packets
+    while ((nbytes = fread(buffer, 1, MAX_BUF_LEN, fp)) > 0) {
+        if (sendto(sockfd, buffer, nbytes, 0, (struct sockaddr*)&multicast_addr, sizeof(multicast_addr)) < 0) {
+            perror("sendto");
+            exit(1);
+        }
+    }
+}
 
 void sig_handler(int signum)
 {
@@ -32,12 +59,7 @@ void sig_handler(int signum)
             printf("\nReceived unknown signal.\n");
             break;
     }
-    printf("Socket closing\n");
-    int i = close(sockfd);
-    if (i != 0) {
-        printf("Error: Could not close socket");
-    }
-    exit(0);
+    end();
 }
 
 void sendMessage(char message[]){
@@ -48,10 +70,6 @@ void sendMessage(char message[]){
 }
 
 int main(int argc, char* argv[]) {
-
-    if (argc > 2) {
-        interface = argv[2];
-    }
 
     signal(SIGINT, sig_handler);
     signal(SIGHUP, sig_handler);
@@ -64,6 +82,9 @@ int main(int argc, char* argv[]) {
     }
 
     // Set to use interface enp1s3 only
+    if (argc > 2) {
+        interface = argv[2];
+    }
     memset(&ifr, 0, sizeof(ifr));
     snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), interface);
     if (setsockopt(sockfd, SOL_SOCKET, SO_BINDTODEVICE, (void *)&ifr, sizeof(ifr)) < 0) {
@@ -83,21 +104,22 @@ int main(int argc, char* argv[]) {
     multicast_addr.sin_addr.s_addr = inet_addr(MULTICAST_IP);
     multicast_addr.sin_port = htons(PORT);
 
-    while(1) {
-        char message[100];
-        if (argc > 1) {
-            int length = strlen(argv[1]);
-            strcpy(message, argv[1]);
-            message[length] = '\n'; // Receiver won't flush buffer without the newline char
-        }
-        else {
-            printf("Enter message: ");
-            fgets(message, sizeof(message), stdin);
-        }
-        printf("Sending: %s", message);
-	sendMessage(message);
-        sleep(2);
+    // Send text containing filename before begin sending file
+    char message[100];
+    if (argc > 1) {
+        int length = strlen(argv[1]);
+        strcpy(message, argv[1]);
+        message[length] = '\n'; // Receiver won't flush buffer without the newline char
     }
+    else {
+        printf("Enter message: ");
+        fgets(message, sizeof(message), stdin);
+    }
+    printf("Sending: %s", message);
+    sendMessage(message);
+    sendFile(message);
 
+    // Finish
+    end();
     return 0;
 }

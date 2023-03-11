@@ -17,7 +17,7 @@ struct ifreq ifr;
 int sockfd;
 struct sockaddr_in addr;
 char buffer[MAX_BUF_LEN];
-const char *interface = "enp1s3";
+const char *interface = "ens1";
 
 void sig_handler(int signum)
 {
