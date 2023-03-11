@@ -49,6 +49,10 @@ void sendMessage(char message[]){
 
 int main(int argc, char* argv[]) {
 
+    if (argc > 2) {
+        interface = argv[2];
+    }
+
     signal(SIGINT, sig_handler);
     signal(SIGHUP, sig_handler);
     signal(SIGTERM, sig_handler);

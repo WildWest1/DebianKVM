@@ -63,10 +63,10 @@ Delete() {
   echo "DESTROYING SPAWNED VMS AND VNETS:"
   echo
   virsh net-destroy net10 >/dev/null 2>/tmp/error ; virsh net-destroy net172 >/dev/null 2>/tmp/error ; virsh net-destroy br192 >/dev/null 2>/tmp/error
-  virsh destroy guest2 2>/dev/null ; virsh destroy guest3 2>/dev/null ; virsh destroy guest4 2>/dev/null
+  virsh destroy guest2 2>/dev/null ; virsh destroy guest3 2>/dev/null  ; virsh destroy guest4 2>/dev/null ; virsh destroy guest5 2>/dev/null
   if [ $PERSISTENT == 1 ]; then
     virsh net-undefine net10 >/dev/null 2>/tmp/error ; virsh net-undefine net172 >/dev/null 2>/tmp/error ; virsh net-undefine net192 >/dev/null 2>/tmp/error ; virsh net-undefine br192 >/dev/null 2>/tmp/error
-    virsh undefine guest2 >/dev/null 2>/tmp/error ; virsh undefine guest3 >/dev/null 2>/tmp/error ; virsh undefine guest4 >/dev/null 2>/tmp/error
+    virsh undefine guest2 >/dev/null 2>/tmp/error ; virsh undefine guest3 >/dev/null 2>/tmp/error ; virsh undefine guest4 >/dev/null 2>/tmp/error ; virsh undefine guest5 >/dev/null 2>/tmp/error
   fi
   # Remove Ramdisk - it will be created and destroyed every time
   if [ $VMDIR == '/var/ramdisk_vm' ]; then
@@ -164,6 +164,7 @@ UpdateXmlConfig() {
   python updatexml.py config/guest2/vm.xml $VMDIR/guest2.qcow2 >/dev/null
   python updatexml.py config/guest3/vm.xml $VMDIR/guest3.qcow2 >/dev/null
   python updatexml.py config/guest4/vm.xml $VMDIR/guest4.qcow2 >/dev/null
+  python updatexml.py config/guest5/vm.xml $VMDIR/guest5.qcow2 >/dev/null
 }
 
 GetXmlPath() {
@@ -196,7 +197,7 @@ ErrorCheck
 echo -ne "CREATING VNETS:\t\t$BLINK_STATUS"
 CreateBridge
 if [ $PERSISTENT -eq 1 ]; then
-  virsh net-define config/net10.xml >/dev/null 2>/tmp/error && virsh net-define config/net172.xml >/dev/null 2>/tmp/error && virsh net-define config/br192.xml >/dev/null 2>/tmp/error 
+  virsh net-define config/net10.xml >/dev/null 2>/tmp/error && virsh net-define config/net172.xml >/dev/null 2>/tmp/error && virsh net-define config/br192.xml >/dev/null 2>/tmp/error
   virsh net-start net10 >/dev/null 2>/tmp/error && virsh net-start net172 >/dev/null 2>/tmp/error && virsh net-start net192 >/dev/null 2>/tmp/error ; virsh net-start br192 >/dev/null 2>/tmp/error
 else
   virsh net-create config/net10.xml >/dev/null 2>/tmp/error && virsh net-create config/net172.xml >/dev/null 2>/tmp/error && virsh net-create config/br192.xml >/dev/null 2>/tmp/error 
@@ -212,22 +213,22 @@ sleep 2	# Let libvirtd get started
 
 # COPY VMS
 echo -ne "COPYING VMS TO RAMDISK:\t$BLINK_STATUS"
-cp guest.qcow2 $VMDIR/guest2.qcow2 && parallel cp $VMDIR/guest2.qcow2 ::: $VMDIR/guest3.qcow2 $VMDIR/guest4.qcow2
+cp guest.qcow2 $VMDIR/guest2.qcow2 && parallel cp $VMDIR/guest2.qcow2 ::: $VMDIR/guest3.qcow2 $VMDIR/guest4.qcow2 $VMDIR/guest5.qcow2
 ErrorCheck
 
 # COPY CONFIGS
 echo -ne "COPYING CONFIGS TO VMS:\t$BLINK_STATUS"
-CopyIn guest2 && CopyIn guest3 && CopyIn guest4
+CopyIn guest2 && CopyIn guest3 && CopyIn guest4 && CopyIn guest5
 ErrorCheck
 
 # CREATE VMS
 echo -ne "VIRSH CREATE VMS:\t$BLINK_STATUS"
 UpdateXmlConfig		# Python script that updates the filename within the xml every time
 if [ $PERSISTENT == 1 ]; then
-  virsh define config/guest2/vm.xml >/dev/null 2>/tmp/error && virsh define config/guest3/vm.xml >/dev/null 2>/tmp/error && virsh define config/guest4/vm.xml >/dev/null 2>/tmp/error
-  virsh start guest2 >/dev/null 2>/tmp/error && virsh start guest3 >/dev/null 2>/tmp/error && virsh start guest4 >/dev/null 2>/tmp/error 
+  virsh define config/guest2/vm.xml >/dev/null 2>/tmp/error && virsh define config/guest3/vm.xml >/dev/null 2>/tmp/error && virsh define config/guest4/vm.xml >/dev/null 2>/tmp/error && virsh define config/guest5/vm.xml >/dev/null 2>/tmp/error
+  virsh start guest2 >/dev/null 2>/tmp/error && virsh start guest3 >/dev/null 2>/tmp/error && virsh start guest4 >/dev/null 2>/tmp/error && virsh start guest5 >/dev/null 2>/tmp/error
 else
-  virsh create config/guest2/vm.xml >/dev/null 2>/tmp/error && virsh create config/guest3/vm.xml >/dev/null 2>/tmp/error && virsh create config/guest4/vm.xml >/dev/null 2>/tmp/error
+  virsh create config/guest2/vm.xml >/dev/null 2>/tmp/error && virsh create config/guest3/vm.xml >/dev/null 2>/tmp/error && virsh create config/guest4/vm.xml >/dev/null 2>/tmp/error && virsh create config/guest5/vm.xml >/dev/null 2>/tmp/error
 fi
 ErrorCheck
 
